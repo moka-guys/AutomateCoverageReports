@@ -1,5 +1,8 @@
 '''
 Created on 18 Nov 2016
+usage = python Generate_external_reports.py -t <NGSTestId> -p <panel1> -q <panel2> -r <panel3>
+
+This script takes a ngs test id and a string of panels and returns a pdf report for this patient for these genes. 
 
 @author: aled
 '''
@@ -100,9 +103,11 @@ class test_input():
         self.string_of_panels = self.string_of_panels + ")"
         self.report_panels = self.report_panels + ")"
         # print string_of_panels
-        self.select_qry = "select dbo.Coverage.GeneSymbol,dbo.Coverage.avg_coverage,dbo.Coverage.above20X \
+        self.select_qry = "select dbo.GenesHGNC_current_translation.ApprovedSymbol,dbo.Coverage.avg_coverage,dbo.Coverage.above20X \
         from dbo.NGSPanelGenes, dbo.GenesHGNC_current_translation, dbo.Coverage \
-        where dbo.NGSPanelGenes.NGSPanelID in " + self.string_of_panels + " and dbo.GenesHGNC_current_translation.RefSeqGeneSymbol=dbo.Coverage.GeneSymbol and dbo.GenesHGNC_current_translation.HGNCID=dbo.NGSPanelGenes.HGNCID and dbo.Coverage.NGSTestID = 134"
+        where dbo.NGSPanelGenes.NGSPanelID in " + self.string_of_panels + " and dbo.GenesHGNC_current_translation.EntrezId_PanelApp=dbo.Coverage.GeneSymbol and dbo.GenesHGNC_current_translation.HGNCID=dbo.NGSPanelGenes.HGNCID and dbo.Coverage.NGSTestID = "+self.NGSTestID
+        #where dbo.NGSPanelGenes.NGSPanelID in " + self.string_of_panels + " and dbo.GenesHGNC_current_translation.RefSeqGeneSymbol=dbo.Coverage.GeneSymbol and dbo.GenesHGNC_current_translation.HGNCID=dbo.NGSPanelGenes.HGNCID and dbo.Coverage.NGSTestID = "+self.NGSTestID
+        
         
         # print self.select_qry
         self.select_qry_exception = "Can't pull out the coverage for NGS test" + str(self.NGSTestID)
@@ -145,7 +150,7 @@ class test_input():
             
             for index, row in df.iterrows():
                 gene=index
-                coverage=str(int(numpy.around(row['Percentage Bases at 20X*'],decimals=0)))
+                coverage=str(int(numpy.floor(row['Percentage Bases at 20X*'])))
                 #print gene
                 
                 html_table=html_table+"\t\t\t\t<tr align=\"center\">\n\
@@ -171,7 +176,7 @@ class test_input():
         '''This function is called to retrieve the whole result of a select query '''
         # Perform query and fetch all
         result = self.cursor.execute(self.select_qry).fetchall()
-
+        self.result=result
         # return result
         if result:
             return(result)
