@@ -176,7 +176,7 @@ class test_input():
         '''This function is called to retrieve the whole result of a select query '''
         # Perform query and fetch all
         result = self.cursor.execute(self.select_qry).fetchall()
-        self.result=result
+        
         # return result
         if result:
             return(result)
