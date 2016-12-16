@@ -1,8 +1,5 @@
 '''
 Created on 18 Nov 2016
-usage = python Generate_external_reports.py -t <NGSTestId> -p <panel1> -q <panel2> -r <panel3>
-
-This script takes a ngs test id and a string of panels and returns a pdf report for this patient for these genes. 
 
 @author: aled
 '''
@@ -26,8 +23,8 @@ class test_input():
         self.usage = "python Generate_external_reports.py -t <NGSTestId> -p <panel1> -q <panel2> -r <panel3>"
 
         # variables for the database connection
-        self.cnxn = pyodbc.connect("DRIVER={SQL Server}; SERVER=GSTTV-MOKA; DATABASE=devdatabase;")
-        #self.cnxn = pyodbc.connect("DRIVER={SQL Server}; SERVER=GSTTV-MOKA; DATABASE=mokadata;")
+        #self.cnxn = pyodbc.connect("DRIVER={SQL Server}; SERVER=GSTTV-MOKA; DATABASE=devdatabase;")
+        self.cnxn = pyodbc.connect("DRIVER={SQL Server}; SERVER=GSTTV-MOKA; DATABASE=mokadata;")
         self.cursor = self.cnxn.cursor()
 
         # dictionary to hold the depth of coverage result for each dna number.
@@ -176,7 +173,7 @@ class test_input():
         '''This function is called to retrieve the whole result of a select query '''
         # Perform query and fetch all
         result = self.cursor.execute(self.select_qry).fetchall()
-        
+        self.result=result
         # return result
         if result:
             return(result)
