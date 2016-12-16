@@ -1,12 +1,6 @@
 '''
 Created on 18 Nov 2016
 
-The usage of this script is "python import_depth_of_coverage.py -d <dnanumber>"
-The script uses this dna number to find the output from the chanjo app on dna nexus which should be saved in a specified folder on the S drive (S:\Genetics\Bioinformatics\NGS\depthofcoverage\genesummaries)
-The script uses the entrez gene id to match each gene in the coverage report with the gene in moka and inserts the coverage into the coverage table
-
-A subsequent script will return a pdf containing the coverage for the genes for the select gene panels.
-
 @author: aled
 '''
 import sys
@@ -28,8 +22,8 @@ class test_input():
         self.dnanumber = ""
 
         # variables for the database connection
-        #self.cnxn = pyodbc.connect("DRIVER={SQL Server}; SERVER=GSTTV-MOKA; DATABASE=mokadata;")
-        self.cnxn = pyodbc.connect("DRIVER={SQL Server}; SERVER=GSTTV-MOKA; DATABASE=devdatabase;")
+        self.cnxn = pyodbc.connect("DRIVER={SQL Server}; SERVER=GSTTV-MOKA; DATABASE=mokadata;")
+        #self.cnxn = pyodbc.connect("DRIVER={SQL Server}; SERVER=GSTTV-MOKA; DATABASE=devdatabase;")
         self.cursor = self.cnxn.cursor()
 
         # dictionary to hold the depth of coverage result for each dna number.
