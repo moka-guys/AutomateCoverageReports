@@ -119,7 +119,7 @@ class test_input():
                 raise Exception(self.select_qry_exception)
 
             # Ensure the NGS testID isn't in the coverage table already:
-            self.select_qry = "select distinct NGSTestID from dbo.Coverage"
+            self.select_qry = "select distinct NGSTestID from dbo.NGSCoverage"
             self.select_qry_exception = "Can't pull out any existing NGStestIDs from coverage table"
             existingNGSTestID = self.select_query()
             list_of_existing_testids = []
