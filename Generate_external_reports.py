@@ -52,7 +52,7 @@ class test_input():
         self.report_panels="("
 
         # path to html template
-        self.html_template = "F:\\Moka\\Files\\Software\\depthofcoverage\\html_template\\"
+        self.html_template = "F:\\Moka\\Files\\Software\\depthofcoverage\\AutomateCoverageReports\\html_template\\"
         self.output_html = "S:\\Genetics\\Bioinformatics\\NGS\\depthofcoverage\\pdf_holding_area\\"
 
         self.path_wkthmltopdf = r'S:\Genetics_Data2\Array\Software\wkhtmltopdf\bin\wkhtmltopdf.exe'
