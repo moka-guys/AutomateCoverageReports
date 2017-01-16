@@ -52,7 +52,7 @@ class test_input():
         self.report_panels="("
 
         # path to html template
-        self.html_template = "F:\\Moka\\Files\\Software\\depthofcoverage\\html_template\\"
+        self.html_template = "F:\\Moka\\Files\\Software\\depthofcoverage\\AutomateCoverageReports\\html_template\\"
         self.output_html = "S:\\Genetics\\Bioinformatics\\NGS\\depthofcoverage\\pdf_holding_area\\"
 
         self.path_wkthmltopdf = r'S:\Genetics_Data2\Array\Software\wkhtmltopdf\bin\wkhtmltopdf.exe'
@@ -100,10 +100,10 @@ class test_input():
         self.string_of_panels = self.string_of_panels + ")"
         self.report_panels = self.report_panels + ")"
         # print string_of_panels
-        self.select_qry = "select dbo.GenesHGNC_current_translation.ApprovedSymbol,dbo.Coverage.avg_coverage,dbo.Coverage.above20X \
-        from dbo.NGSPanelGenes, dbo.GenesHGNC_current_translation, dbo.Coverage \
-        where dbo.NGSPanelGenes.NGSPanelID in " + self.string_of_panels + " and dbo.GenesHGNC_current_translation.EntrezId_PanelApp=dbo.Coverage.GeneSymbol and dbo.GenesHGNC_current_translation.HGNCID=dbo.NGSPanelGenes.HGNCID and dbo.Coverage.NGSTestID = "+self.NGSTestID
-        #where dbo.NGSPanelGenes.NGSPanelID in " + self.string_of_panels + " and dbo.GenesHGNC_current_translation.RefSeqGeneSymbol=dbo.Coverage.GeneSymbol and dbo.GenesHGNC_current_translation.HGNCID=dbo.NGSPanelGenes.HGNCID and dbo.Coverage.NGSTestID = "+self.NGSTestID
+        self.select_qry = "select dbo.GenesHGNC_current_translation.ApprovedSymbol,dbo.NGSCoverage.avg_coverage,dbo.NGSCoverage.above20X \
+        from dbo.NGSPanelGenes, dbo.GenesHGNC_current_translation, dbo.NGSCoverage \
+        where dbo.NGSPanelGenes.NGSPanelID in " + self.string_of_panels + " and dbo.GenesHGNC_current_translation.EntrezId_PanelApp=dbo.NGSCoverage.GeneSymbol and dbo.GenesHGNC_current_translation.HGNCID=dbo.NGSPanelGenes.HGNCID and dbo.NGSCoverage.NGSTestID = "+self.NGSTestID
+        #where dbo.NGSPanelGenes.NGSPanelID in " + self.string_of_panels + " and dbo.GenesHGNC_current_translation.RefSeqGeneSymbol=dbo.NGSCoverage.GeneSymbol and dbo.GenesHGNC_current_translation.HGNCID=dbo.NGSPanelGenes.HGNCID and dbo.NGSCoverage.NGSTestID = "+self.NGSTestID
         
         
         # print self.select_qry

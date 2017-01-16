@@ -1,0 +1,19 @@
+@page {
+  size: A4;
+}
+
+h1 {
+  page-break-before: always;
+}
+
+@page:right{
+  @bottom-right {
+    content: "Page " counter(page) " of " counter(pages);
+  }
+}
+
+div {
+    height: 200px;
+    width: 100%;
+    background-color: powderblue;
+}

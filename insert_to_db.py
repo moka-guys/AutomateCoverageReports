@@ -67,29 +67,33 @@ class test_input():
         each dnanumber there is another dictionary with the gene as a key and coverage as value'''
         # for DoC file in folder
         for file in os.listdir(self.folder_path):
-            # capture info from the filename
-            filename = file.split("_")
-            DNAnumber = filename[2]
-            # print self.dnanumber
-            if DNAnumber == self.dnanumber:
-                # print file
-                # create an empty dict for this DNA number
-                self.coverage_dictionary[DNAnumber] = {}
-
-                # open and loop through file
-                gene_summary_file = open(self.folder_path + "/" + file, 'r')
-                for line in gene_summary_file:
-                    # ignore header
-                    if line.startswith("Gene"):  # or line.startswith("UNKNOWN") or line.startswith("LOC100287896") or line.startswith("LOC81691")or line.startswith("TARP"):
-                        pass
-                    else:
-                        # capture gene, avg coverage and coverage @ 20X
-                        splitline = line.split('\t')
-                        gene = splitline[0]
-                        avg_coverage = splitline[2]
-                        coverage20x = splitline[1]
-                        # put this tuple into dict
-                        self.coverage_dictionary[DNAnumber][gene] = ((avg_coverage, coverage20x.rstrip()))
+            if file.startswith("imported"):
+                pass
+            else:
+                # capture info from the filename
+                filename = file.split("_")
+                print filename
+                DNAnumber = filename[2]
+                # print self.dnanumber
+                if DNAnumber == self.dnanumber:
+                    # print file
+                    # create an empty dict for this DNA number
+                    self.coverage_dictionary[DNAnumber] = {}
+    
+                    # open and loop through file
+                    gene_summary_file = open(self.folder_path + "/" + file, 'r')
+                    for line in gene_summary_file:
+                        # ignore header
+                        if line.startswith("Gene"):  # or line.startswith("UNKNOWN") or line.startswith("LOC100287896") or line.startswith("LOC81691")or line.startswith("TARP"):
+                            pass
+                        else:
+                            # capture gene, avg coverage and coverage @ 20X
+                            splitline = line.split('\t')
+                            gene = splitline[0]
+                            avg_coverage = splitline[2]
+                            coverage20x = splitline[1]
+                            # put this tuple into dict
+                            self.coverage_dictionary[DNAnumber][gene] = ((avg_coverage, coverage20x.rstrip()))
 
 
     def insert_to_db(self):
@@ -119,7 +123,7 @@ class test_input():
                 raise Exception(self.select_qry_exception)
 
             # Ensure the NGS testID isn't in the coverage table already:
-            self.select_qry = "select distinct NGSTestID from dbo.Coverage"
+            self.select_qry = "select distinct NGSTestID from dbo.NGSCoverage"
             self.select_qry_exception = "Can't pull out any existing NGStestIDs from coverage table"
             existingNGSTestID = self.select_query()
             list_of_existing_testids = []
@@ -137,7 +141,7 @@ class test_input():
                     avg_coverage = self.coverage_dictionary[dnanumber][gene][0]
                     above20x = self.coverage_dictionary[dnanumber][gene][1]
                     # insert gene to coverage table
-                    self.insert_query = "insert into dbo.Coverage (GeneSymbol,InternalPatientID,avg_coverage,above20X,DNAnumber,runfolder,NGSTestID) values ('" + str(ApprovedSymbol) + "'," + str(self.InternalPatientID) + "," + str(avg_coverage) + "," + str(above20x) + "," + str(dnanumber) + ",'" + self.runfolder + "'," + str(self.NGSTestID) + ")"
+                    self.insert_query = "insert into dbo.NGSCoverage (GeneSymbol,InternalPatientID,avg_coverage,above20X,DNAnumber,runfolder,NGSTestID) values ('" + str(ApprovedSymbol) + "'," + str(self.InternalPatientID) + "," + str(avg_coverage) + "," + str(above20x) + "," + str(dnanumber) + ",'" + self.runfolder + "'," + str(self.NGSTestID) + ")"
                     self.insert_query_function()
 
             # call function to make coverage report
