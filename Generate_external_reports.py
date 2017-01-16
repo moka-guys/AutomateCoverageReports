@@ -103,7 +103,7 @@ class test_input():
         self.select_qry = "select dbo.GenesHGNC_current_translation.ApprovedSymbol,dbo.NGSCoverage.avg_coverage,dbo.NGSCoverage.above20X \
         from dbo.NGSPanelGenes, dbo.GenesHGNC_current_translation, dbo.NGSCoverage \
         where dbo.NGSPanelGenes.NGSPanelID in " + self.string_of_panels + " and dbo.GenesHGNC_current_translation.EntrezId_PanelApp=dbo.NGSCoverage.GeneSymbol and dbo.GenesHGNC_current_translation.HGNCID=dbo.NGSPanelGenes.HGNCID and dbo.NGSCoverage.NGSTestID = "+self.NGSTestID
-        #where dbo.NGSPanelGenes.NGSPanelID in " + self.string_of_panels + " and dbo.GenesHGNC_current_translation.RefSeqGeneSymbol=dbo.Coverage.GeneSymbol and dbo.GenesHGNC_current_translation.HGNCID=dbo.NGSPanelGenes.HGNCID and dbo.Coverage.NGSTestID = "+self.NGSTestID
+        #where dbo.NGSPanelGenes.NGSPanelID in " + self.string_of_panels + " and dbo.GenesHGNC_current_translation.RefSeqGeneSymbol=dbo.NGSCoverage.GeneSymbol and dbo.GenesHGNC_current_translation.HGNCID=dbo.NGSPanelGenes.HGNCID and dbo.NGSCoverage.NGSTestID = "+self.NGSTestID
         
         
         # print self.select_qry
