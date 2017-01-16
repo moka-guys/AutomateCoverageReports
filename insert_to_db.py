@@ -72,7 +72,6 @@ class test_input():
             else:
                 # capture info from the filename
                 filename = file.split("_")
-                print filename
                 DNAnumber = filename[2]
                 # print self.dnanumber
                 if DNAnumber == self.dnanumber:
