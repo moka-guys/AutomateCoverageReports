@@ -107,7 +107,7 @@ class test_input():
         
         
         # print self.select_qry
-        self.select_qry_exception = "Can't pull out the coverage for NGS test" + str(self.NGSTestID)
+        self.select_qry_exception = "Can't pull out the coverage for NGS test" + str(self.NGSTestID)+". query is: "+ self.select_qry
         coverage_result = self.select_query()
 
         # print coverage_result
@@ -125,7 +125,7 @@ class test_input():
             template = env.get_template("internal_report_template.html")
 
             self.select_qry = "select BookinLastName,BookinFirstName,BookinDOB,'MALE',PatientID, dna from dbo.NGSTest, dbo.Patients where BookinSex = 'M' and dbo.Patients.InternalPatientID=dbo.NGSTest.InternalPatientID and NGSTestID = " + str(self.NGSTestID) + " union select BookinLastName,BookinFirstName,BookinDOB,'FEMALE',PatientID,dna from dbo.NGSTest, dbo.Patients where BookinSex = 'F' and dbo.Patients.InternalPatientID=dbo.NGSTest.InternalPatientID and NGSTestID = " + str(self.NGSTestID)
-            self.select_qry_exception = "Can't pull out the patient info for NGSTestID " + str(self.NGSTestID)
+            self.select_qry_exception = "Can't pull out the patient info for NGSTestID " + str(self.NGSTestID) + ". Bookinsex must be F or M, an NGSTestID must be present and joins are dbo.Patients.InternalPatientID=dbo.NGSTest.InternalPatientID "
             ID = self.select_query()
             PRU = ID[0][4]
             PRU_for_pdfname=PRU.replace(":","")
@@ -162,10 +162,8 @@ class test_input():
             #print template_vars["coverage_table"]
             with open(self.output_html + str(self.NGSTestID) + ".html", "wb") as fh:
                 fh.write(template.render(template_vars))
-            
-            
 
-            
+
             options={'footer-right':'Page [page] of [toPage]','footer-left':'Date Created [isodate]'}
             pdfkit.from_file(self.output_html + str(self.NGSTestID) + ".html", self.output_html + str(PRU_for_pdfname)+"." +str(DNAnumber)+ ".cov.pdf", configuration=self.config,options=options)
 
@@ -177,15 +175,8 @@ class test_input():
         # return result
         if result:
             return(result)
-        elif self.gene:
-            result = self.cursor.execute(self.backup_qry).fetchall()
-            if result:
-                return(result)
-            else:
-                raise Exception(self.select_qry_exception)
         else:
-            pass
-            #raise Exception(self.select_qry_exception)
+            raise Exception(self.select_qry_exception)
 
     def insert_query_function(self):
         '''This function executes an insert query'''
