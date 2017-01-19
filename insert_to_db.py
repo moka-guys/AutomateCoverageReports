@@ -35,9 +35,6 @@ class test_input():
         self.select_qry_exception = ""
         self.backup_qry = ""
 
-        # variable to inform an if loop
-        self.gene = False
-
         # variables to capture info from moka
         self.runfolder = ""
         self.InternalPatientID = ""
@@ -99,6 +96,7 @@ class test_input():
         '''Work through the self.coverage dict and extract identifiers from dna number. The '''
         # for each sample
         for dnanumber in self.coverage_dictionary:
+            print "dnanumber = "+str(dnanumber)
             # capture the runfolder from the path
             runfolderpath = self.folder_path.split('\\')
             self.runfolder = runfolderpath[-1]
@@ -106,13 +104,13 @@ class test_input():
             # select query to find the internal patientid from dna number
             self.select_qry = "select InternalPatientID from dbo.DNA where DNANumber = '" + dnanumber + "'"
             # print self.select_qry
-            self.select_qry_exception = "can't get the internalpatientID"
+            self.select_qry_exception = "can't get the internalpatientID from dnanumber " + str(dnanumber)
             # capture the internal patientid
             self.InternalPatientID = self.select_query()[0][0]
 
             # Get the NGS test ID
             self.select_qry = "select NGSTestID from dbo.NGSTest where InternalPatientID=" + str(self.InternalPatientID)  # +" and StatusID != 4"
-            self.select_qry_exception = "Can't pull out the NGS test ID for this patient"
+            self.select_qry_exception = "Can't pull out the NGS test ID for internal patient id " + str(self.InternalPatientID)
             NGSTestID = self.select_query()
             if NGSTestID:
                 # ensure only one NGSTestID:
@@ -154,15 +152,8 @@ class test_input():
         # return result
         if result:
             return(result)
-        elif self.gene:
-            result = self.cursor.execute(self.backup_qry).fetchall()
-            if result:
-                return(result)
-            else:
-                raise Exception(self.select_qry_exception)
         else:
-            pass
-            #raise Exception(self.select_qry_exception)
+            raise Exception(self.select_qry_exception)
 
     def insert_query_function(self):
         '''This function executes an insert query'''
