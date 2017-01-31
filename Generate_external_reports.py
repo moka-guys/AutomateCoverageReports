@@ -93,11 +93,19 @@ class test_input():
             self.string_of_panels = self.string_of_panels + str(self.panel1)
             self.report_panels = self.report_panels + "Pan" +str(self.panel1)
         if self.panel2:
-            self.string_of_panels = self.string_of_panels + "," + str(self.panel2)
-            self.report_panels = self.report_panels + ", Pan" + str(self.panel2)
+            if self.panel1:
+                self.string_of_panels = self.string_of_panels + "," + str(self.panel2)
+                self.report_panels = self.report_panels + ", Pan" + str(self.panel2)
+            else:
+                self.string_of_panels = self.string_of_panels + str(self.panel2)
+                self.report_panels = self.report_panels + "Pan" +str(self.panel2)
         if self.panel3:
-            self.string_of_panels = self.string_of_panels + "," + str(self.panel3)
-            self.report_panels = self.report_panels + ", Pan" + str(self.panel3)
+            if self.panel1 or self.panel2:
+                self.string_of_panels = self.string_of_panels + "," + str(self.panel3)
+                self.report_panels = self.report_panels + ", Pan" + str(self.panel3)
+            else:
+                self.string_of_panels = self.string_of_panels + str(self.panel3)
+                self.report_panels = self.report_panels + "Pan" +str(self.panel3)
 
         self.string_of_panels = self.string_of_panels + ")"
         self.report_panels = self.report_panels + ")"
