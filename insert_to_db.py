@@ -1,30 +1,28 @@
 '''
 Created on 18 Nov 2016
-
 @author: aled
 '''
 import sys
 import getopt
 import os
 import pyodbc
-import pandas as pd
-from jinja2 import Environment, FileSystemLoader
-import pdfkit
-import datetime
-import numpy
 
 
 class test_input():
 
-    '''script should receive an argument -p or --path which contains the path to the depth of coverage files.'''
+    '''script should receive an argument -d or --dnanumber which contains the path to the depth of coverage files.'''
 
     def __init__(self):
-        # args
-        self.usage = "python Generate_external_reports.py -t <NGSTestId> -p <panel1> -q <panel2> -r <panel3>"
+        self.folder_path = "S:\\Genetics\\Bioinformatics\\NGS\\depthofcoverage\\genesummaries\\"
+        #self.folder_path = "S:\\Genetics_Data2\\Array\\Audits and Projects\\161118 automatecoverage\\chanjo_out\\"
+        self.usage = "python import_depth_of_coverage.py -d <dnanumber>"
+
+        # self.dnanumber
+        self.dnanumber = ""
 
         # variables for the database connection
-        #self.cnxn = pyodbc.connect("DRIVER={SQL Server}; SERVER=GSTTV-MOKA; DATABASE=devdatabase;")
         self.cnxn = pyodbc.connect("DRIVER={SQL Server}; SERVER=GSTTV-MOKA; DATABASE=mokadata;")
+        #self.cnxn = pyodbc.connect("DRIVER={SQL Server}; SERVER=GSTTV-MOKA; DATABASE=devdatabase;")
         self.cursor = self.cnxn.cursor()
 
         # dictionary to hold the depth of coverage result for each dna number.
@@ -36,38 +34,19 @@ class test_input():
         self.select_qry_exception = ""
         self.backup_qry = ""
 
-        # variable to inform an if loop
-        self.gene = False
-
         # variables to capture info from moka
         self.runfolder = ""
         self.InternalPatientID = ""
-        self.NGSTestID = None
+        self.NGSTestID = ""
 
-        self.panel1 = None
-        self.panel2 = None
-        self.panel3 = None
-        
-        self.string_of_panels = "("
-        self.report_panels="("
-        
-        self.mokapipeversion=""
 
-        # path to html template
-        self.html_template = "F:\\Moka\\Files\\Software\\depthofcoverage\\AutomateCoverageReports\\html_template\\"
-        self.output_html = "S:\\Genetics\\Bioinformatics\\NGS\\depthofcoverage\\pdf_holding_area\\"
-
-        self.path_wkthmltopdf = r'S:\Genetics_Data2\Array\Software\wkhtmltopdf\bin\wkhtmltopdf.exe'
-        self.config = pdfkit.configuration(wkhtmltopdf=self.path_wkthmltopdf)
-
-    def capture_NGSTestID(self, argv):
+    def set_depth_of_coverage_path(self, argv):
         ''' capture the command line arguments'''
-        # print argv
-
+        # look for path argument
         try:
-            opts, args = getopt.getopt(argv, "t:p:q:r:", ["NGSTestId=", "panel1", "panel2", "panel3"])
+            opts, args = getopt.getopt(argv, "d:", ["dnanumber="])
         except getopt.GetoptError:
-            print "ERROR", self.usage
+            print self.usage
             sys.exit(2)
 
         # if help argument print usage otherwise capture path argument
@@ -75,108 +54,100 @@ class test_input():
             if opt == 'h':
                 print self.usage
                 sys.exit()
-            elif opt in ("-t", "--NGSTestId"):
-                self.NGSTestID = arg
-                # print "NGS TEST ID FOUND", self.NGSTestID
-            elif opt in ("-p", "--panel1"):
-                self.panel1 = arg
-                # print "PANEL1=",str(self.panel1)
-            elif opt in ("-q", "--panel2"):
-                self.panel2 = int(arg)
-            elif opt in ("-r", "--panel3"):
-                self.panel3 = int(arg)
+            elif opt in ("-d", "--dnanumber"):
+                self.dnanumber = arg
 
-    def create_coverage_report(self):
-        ''' This function creates a coverage report for each sample using the NGSTestID and  '''
-        # build a string of panels passed to program for sql query
-        if self.panel1:
-            self.string_of_panels = self.string_of_panels + str(self.panel1)
-            self.report_panels = self.report_panels + "Pan" +str(self.panel1)
-        if self.panel2:
-            self.string_of_panels = self.string_of_panels + "," + str(self.panel2)
-            self.report_panels = self.report_panels + ", Pan" + str(self.panel2)
-        if self.panel3:
-            self.string_of_panels = self.string_of_panels + "," + str(self.panel3)
-            self.report_panels = self.report_panels + ", Pan" + str(self.panel3)
-
-        self.string_of_panels = self.string_of_panels + ")"
-        self.report_panels = self.report_panels + ")"
-        # print string_of_panels
-        self.select_qry = "select dbo.GenesHGNC_current_translation.ApprovedSymbol,dbo.NGSCoverage.avg_coverage,dbo.NGSCoverage.above20X \
-        from dbo.NGSPanelGenes, dbo.GenesHGNC_current_translation, dbo.NGSCoverage \
-        where dbo.NGSPanelGenes.NGSPanelID in " + self.string_of_panels + " and dbo.GenesHGNC_current_translation.EntrezId_PanelApp=dbo.NGSCoverage.GeneSymbol and dbo.GenesHGNC_current_translation.HGNCID=dbo.NGSPanelGenes.HGNCID and dbo.NGSCoverage.NGSTestID = "+self.NGSTestID
-        #where dbo.NGSPanelGenes.NGSPanelID in " + self.string_of_panels + " and dbo.GenesHGNC_current_translation.RefSeqGeneSymbol=dbo.NGSCoverage.GeneSymbol and dbo.GenesHGNC_current_translation.HGNCID=dbo.NGSPanelGenes.HGNCID and dbo.NGSCoverage.NGSTestID = "+self.NGSTestID
-        
-        
-        # print self.select_qry
-        self.select_qry_exception = "Can't pull out the coverage for NGS test" + str(self.NGSTestID)+". query is: "+ self.select_qry
-        coverage_result = self.select_query()
-
-        # print coverage_result
-        for_df = {}
-        if coverage_result is not None:
-            for gene in coverage_result:
-                for_df[gene[0]] = [gene[2]]
-
-            df = pd.DataFrame.from_dict(for_df, orient='index')
-            df.columns = ['Percentage Bases at 20X*']
-            df.sort_index(inplace=True)
-            # print df
-
-            env = Environment(loader=FileSystemLoader(self.html_template))
-            template = env.get_template("internal_report_template.html")
-
-            #self.select_qry = "select BookinLastName,BookinFirstName,BookinDOB,'MALE',PatientID, dna, item from dbo.NGSTest, dbo.Patients, dbo.Item where BookinSex = 'M' and dbo.Item.ItemID=dbo.NGSTest.pipelineversion and dbo.Patients.InternalPatientID=dbo.NGSTest.InternalPatientID and NGSTestID = " + str(self.NGSTestID) + " union select BookinLastName,BookinFirstName,BookinDOB,'FEMALE',PatientID,dna, item from dbo.NGSTest, dbo.Patients, dbo.Item where BookinSex = 'F' and dbo.Item.ItemID=dbo.NGSTest.pipelineversion and dbo.Patients.InternalPatientID=dbo.NGSTest.InternalPatientID and NGSTestID = " + str(self.NGSTestID)
-            self.select_qry = "select BookinLastName,BookinFirstName,BookinDOB,'MALE',PatientID, dna, item  from dbo.NGSTest, dbo.Patients, dbo.Item where BookinSex = 'M' and dbo.Item.ItemID=dbo.NGSTest.pipelineversion and dbo.Patients.InternalPatientID=dbo.NGSTest.InternalPatientID and NGSTestID = " + str(self.NGSTestID) + " union select BookinLastName,BookinFirstName,BookinDOB,'FEMALE',PatientID,dna , item from dbo.NGSTest, dbo.Patients, dbo.Item where BookinSex = 'F' and dbo.Item.ItemID=dbo.NGSTest.pipelineversion and dbo.Patients.InternalPatientID=dbo.NGSTest.InternalPatientID and NGSTestID = " + str(self.NGSTestID)
-
-            self.select_qry_exception = "Can't pull out the patient info for NGSTestID " + str(self.NGSTestID) + ". Bookinsex must be F or M, an NGSTestID must be present and joins are dbo.Patients.InternalPatientID=dbo.NGSTest.InternalPatientID "
-            ID = self.select_query()
-            PRU = ID[0][4]
-            PRU_for_pdfname=PRU.replace(":","")
-            Name = str.upper(ID[0][0]) + " " + ID[0][1]
-            Gender = ID[0][3]
-            DoB = ID[0][2]
-            DNAnumber=ID[0][5]
-            format = "%d/%m/%Y"
-            DoB = DoB.strftime(format)
-            self.mokapipeversion=ID[0][6]
-            
-            html_table="<table border=\"1\" width=\"60%\" cellpadding=\"3\" cellspacing=\"0\">\n\
-            \t<thead>\n\
-            \t<tr style=\"text-align: centre;\" bgcolor=\"#A8A8A8\">\n\
-            \t\t<th>Gene</th>\n\
-            \t\t<th>Percentage Bases at 20X*</th>\n\
-            \t</tr>\n\
-            </thead>\n\
-            <tbody>\n"
-            
-            for index, row in df.iterrows():
-                gene=index
-                coverage=str(int(numpy.floor(row['Percentage Bases at 20X*'])))
-                #print gene
-                
-                html_table=html_table+"\t\t\t\t<tr align=\"center\">\n\
-                \t<td>"+gene+"</td>\n\
-                \t<td>"+coverage+"</td>\n\
-                </tr>\n"
-            
-            html_table=html_table+"</tbody>\n</table>"
-             
-            template_vars = {"coverage_table":html_table, "panellist":self.report_panels, "PRU": PRU, "Name": Name, "Gender": Gender, "DoB": DoB, "MokaPipe_version":self.mokapipeversion}
-             
-            #print template_vars["coverage_table"]
-            with open(self.output_html + str(self.NGSTestID) + ".html", "wb") as fh:
-                fh.write(template.render(template_vars))
+    def read_depth_of_coverage_files(self):
+        '''using the path argument loop through all the depth of coverage files in folder. 
+        Create a dictionary entry within self.coverage dict for each dna number. 
+        each dnanumber there is another dictionary with the gene as a key and coverage as value'''
+        # for DoC file in folder
+        for file in os.listdir(self.folder_path):
+            if file.startswith("imported"):
+                pass
+            else:
+                # capture info from the filename
+                filename = file.split("_")
+                DNAnumber = filename[2]
+                # print self.dnanumber
+                if DNAnumber == self.dnanumber:
+                    # print file
+                    # create an empty dict for this DNA number
+                    self.coverage_dictionary[DNAnumber] = {}
+    
+                    # open and loop through file
+                    gene_summary_file = open(self.folder_path + "/" + file, 'r')
+                    for line in gene_summary_file:
+                        # ignore header
+                        if line.startswith("Gene"):  # or line.startswith("UNKNOWN") or line.startswith("LOC100287896") or line.startswith("LOC81691")or line.startswith("TARP"):
+                            pass
+                        else:
+                            # capture gene, avg coverage and coverage @ 20X
+                            splitline = line.split('\t')
+                            gene = splitline[0]
+                            avg_coverage = splitline[2]
+                            coverage20x = splitline[1]
+                            # put this tuple into dict
+                            self.coverage_dictionary[DNAnumber][gene] = ((avg_coverage, coverage20x.rstrip()))
 
 
-            options={'footer-right':'Page [page] of [toPage]','footer-left':'Date Created [isodate]'}
-            pdfkit.from_file(self.output_html + str(self.NGSTestID) + ".html", self.output_html + str(PRU_for_pdfname)+"." +str(DNAnumber)+ ".cov.pdf", configuration=self.config,options=options)
+    def insert_to_db(self):
+        '''Work through the self.coverage dict and extract identifiers from dna number. The '''
+        # for each sample
+        for dnanumber in self.coverage_dictionary:
+            print "dnanumber = "+str(dnanumber)
+            # capture the runfolder from the path
+            runfolderpath = self.folder_path.split('\\')
+            self.runfolder = runfolderpath[-1]
+
+            # select query to find the internal patientid from dna number
+            self.select_qry = "select InternalPatientID from dbo.DNA where DNANumber = '" + dnanumber + "'"
+            # print self.select_qry
+            self.select_qry_exception = "can't get the internalpatientID from dnanumber " + str(dnanumber)
+            # capture the internal patientid
+            self.InternalPatientID = self.select_query()[0][0]
+
+            # Get the NGS test ID
+            self.select_qry = "select NGSTestID from dbo.NGSTest where InternalPatientID=" + str(self.InternalPatientID)  # +" and StatusID != 4"
+            self.select_qry_exception = "Can't pull out the NGS test ID for internal patient id " + str(self.InternalPatientID)
+            NGSTestID = self.select_query()
+            if NGSTestID:
+                # ensure only one NGSTestID:
+                assert len(NGSTestID) == 1
+                self.NGSTestID = NGSTestID[0][0]
+            else:
+                raise Exception(self.select_qry_exception)
+
+            # Ensure the NGS testID isn't in the coverage table already:
+            self.select_qry = "select distinct NGSTestID from dbo.NGSCoverage"
+            self.select_qry_exception = "Can't pull out any existing NGStestIDs from coverage table"
+            existingNGSTestID = self.select_query()
+            list_of_existing_testids = []
+            if existingNGSTestID:
+                for i in existingNGSTestID:
+                    list_of_existing_testids.append(i[0])
+
+            # if NGSTestID not already in coverage pass
+            if self.NGSTestID in list_of_existing_testids:
+                print "NGS TEST ALREADY IMPORTED"
+            else:
+                # for each gene capture elements of tuple
+                for gene in self.coverage_dictionary[dnanumber]:
+                    ApprovedSymbol = gene
+                    avg_coverage = self.coverage_dictionary[dnanumber][gene][0]
+                    above20x = self.coverage_dictionary[dnanumber][gene][1]
+                    # insert gene to coverage table
+                    self.insert_query = "insert into dbo.NGSCoverage (GeneSymbol,InternalPatientID,avg_coverage,above20X,DNAnumber,runfolder,NGSTestID) values ('" + str(ApprovedSymbol) + "'," + str(self.InternalPatientID) + "," + str(avg_coverage) + "," + str(above20x) + "," + str(dnanumber) + ",'" + self.runfolder + "'," + str(self.NGSTestID) + ")"
+                    self.insert_query_function()
+
+            # call function to make coverage report
+            # self.get_panel()
 
     def select_query(self):
         '''This function is called to retrieve the whole result of a select query '''
         # Perform query and fetch all
         result = self.cursor.execute(self.select_qry).fetchall()
-        self.result=result
+
         # return result
         if result:
             return(result)
@@ -189,7 +160,9 @@ class test_input():
         self.cursor.execute(self.insert_query)
         self.cursor.commit()
 
+
 if __name__ == '__main__':
     a = test_input()
-    a.capture_NGSTestID(sys.argv[1:])
-    a.create_coverage_report()
+    a.set_depth_of_coverage_path(sys.argv[1:])
+    a.read_depth_of_coverage_files()
+    a.insert_to_db()
