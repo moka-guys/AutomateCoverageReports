@@ -50,6 +50,8 @@ class test_input():
         
         self.string_of_panels = "("
         self.report_panels="("
+        
+        self.mokapipeversion=""
 
         # path to html template
         self.html_template = "F:\\Moka\\Files\\Software\\depthofcoverage\\AutomateCoverageReports\\html_template\\"
@@ -91,11 +93,19 @@ class test_input():
             self.string_of_panels = self.string_of_panels + str(self.panel1)
             self.report_panels = self.report_panels + "Pan" +str(self.panel1)
         if self.panel2:
-            self.string_of_panels = self.string_of_panels + "," + str(self.panel2)
-            self.report_panels = self.report_panels + ", Pan" + str(self.panel2)
+            if self.panel1:
+                self.string_of_panels = self.string_of_panels + "," + str(self.panel2)
+                self.report_panels = self.report_panels + ", Pan" + str(self.panel2)
+            else:
+                self.string_of_panels = self.string_of_panels + str(self.panel2)
+                self.report_panels = self.report_panels + "Pan" +str(self.panel2)
         if self.panel3:
-            self.string_of_panels = self.string_of_panels + "," + str(self.panel3)
-            self.report_panels = self.report_panels + ", Pan" + str(self.panel3)
+            if self.panel1 or self.panel2:
+                self.string_of_panels = self.string_of_panels + "," + str(self.panel3)
+                self.report_panels = self.report_panels + ", Pan" + str(self.panel3)
+            else:
+                self.string_of_panels = self.string_of_panels + str(self.panel3)
+                self.report_panels = self.report_panels + "Pan" +str(self.panel3)
 
         self.string_of_panels = self.string_of_panels + ")"
         self.report_panels = self.report_panels + ")"
@@ -124,7 +134,9 @@ class test_input():
             env = Environment(loader=FileSystemLoader(self.html_template))
             template = env.get_template("internal_report_template.html")
 
-            self.select_qry = "select BookinLastName,BookinFirstName,BookinDOB,'MALE',PatientID, dna from dbo.NGSTest, dbo.Patients where BookinSex = 'M' and dbo.Patients.InternalPatientID=dbo.NGSTest.InternalPatientID and NGSTestID = " + str(self.NGSTestID) + " union select BookinLastName,BookinFirstName,BookinDOB,'FEMALE',PatientID,dna from dbo.NGSTest, dbo.Patients where BookinSex = 'F' and dbo.Patients.InternalPatientID=dbo.NGSTest.InternalPatientID and NGSTestID = " + str(self.NGSTestID)
+            #self.select_qry = "select BookinLastName,BookinFirstName,BookinDOB,'MALE',PatientID, dna, item from dbo.NGSTest, dbo.Patients, dbo.Item where BookinSex = 'M' and dbo.Item.ItemID=dbo.NGSTest.pipelineversion and dbo.Patients.InternalPatientID=dbo.NGSTest.InternalPatientID and NGSTestID = " + str(self.NGSTestID) + " union select BookinLastName,BookinFirstName,BookinDOB,'FEMALE',PatientID,dna, item from dbo.NGSTest, dbo.Patients, dbo.Item where BookinSex = 'F' and dbo.Item.ItemID=dbo.NGSTest.pipelineversion and dbo.Patients.InternalPatientID=dbo.NGSTest.InternalPatientID and NGSTestID = " + str(self.NGSTestID)
+            self.select_qry = "select BookinLastName,BookinFirstName,BookinDOB,'MALE',PatientID, dna, item  from dbo.NGSTest, dbo.Patients, dbo.Item where BookinSex = 'M' and dbo.Item.ItemID=dbo.NGSTest.pipelineversion and dbo.Patients.InternalPatientID=dbo.NGSTest.InternalPatientID and NGSTestID = " + str(self.NGSTestID) + " union select BookinLastName,BookinFirstName,BookinDOB,'FEMALE',PatientID,dna , item from dbo.NGSTest, dbo.Patients, dbo.Item where BookinSex = 'F' and dbo.Item.ItemID=dbo.NGSTest.pipelineversion and dbo.Patients.InternalPatientID=dbo.NGSTest.InternalPatientID and NGSTestID = " + str(self.NGSTestID)
+
             self.select_qry_exception = "Can't pull out the patient info for NGSTestID " + str(self.NGSTestID) + ". Bookinsex must be F or M, an NGSTestID must be present and joins are dbo.Patients.InternalPatientID=dbo.NGSTest.InternalPatientID "
             ID = self.select_query()
             PRU = ID[0][4]
@@ -135,6 +147,7 @@ class test_input():
             DNAnumber=ID[0][5]
             format = "%d/%m/%Y"
             DoB = DoB.strftime(format)
+            self.mokapipeversion=ID[0][6]
             
             html_table="<table border=\"1\" width=\"60%\" cellpadding=\"3\" cellspacing=\"0\">\n\
             \t<thead>\n\
@@ -157,7 +170,7 @@ class test_input():
             
             html_table=html_table+"</tbody>\n</table>"
              
-            template_vars = {"coverage_table":html_table, "panellist":self.report_panels, "PRU": PRU, "Name": Name, "Gender": Gender, "DoB": DoB}
+            template_vars = {"coverage_table":html_table, "panellist":self.report_panels, "PRU": PRU, "Name": Name, "Gender": Gender, "DoB": DoB, "MokaPipe_version":self.mokapipeversion}
              
             #print template_vars["coverage_table"]
             with open(self.output_html + str(self.NGSTestID) + ".html", "wb") as fh:
