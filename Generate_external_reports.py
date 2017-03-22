@@ -56,7 +56,7 @@ class test_input():
         # path to html template
         self.html_template = "F:\\Moka\\Files\\Software\\depthofcoverage\\AutomateCoverageReports\\html_template\\"
         self.output_html = "S:\\Genetics\\Bioinformatics\\NGS\\depthofcoverage\\pdf_holding_area\\"
-
+        
         self.path_wkthmltopdf = r'S:\Genetics_Data2\Array\Software\wkhtmltopdf\bin\wkhtmltopdf.exe'
         self.config = pdfkit.configuration(wkhtmltopdf=self.path_wkthmltopdf)
 
@@ -109,6 +109,7 @@ class test_input():
 
         self.string_of_panels = self.string_of_panels + ")"
         self.report_panels = self.report_panels + ")"
+        
         # print string_of_panels
         self.select_qry = "select dbo.GenesHGNC_current_translation.ApprovedSymbol,dbo.NGSCoverage.avg_coverage,dbo.NGSCoverage.above20X \
         from dbo.NGSPanelGenes, dbo.GenesHGNC_current_translation, dbo.NGSCoverage \
@@ -135,7 +136,7 @@ class test_input():
             template = env.get_template("internal_report_template.html")
 
             #self.select_qry = "select BookinLastName,BookinFirstName,BookinDOB,'MALE',PatientID, dna, item from dbo.NGSTest, dbo.Patients, dbo.Item where BookinSex = 'M' and dbo.Item.ItemID=dbo.NGSTest.pipelineversion and dbo.Patients.InternalPatientID=dbo.NGSTest.InternalPatientID and NGSTestID = " + str(self.NGSTestID) + " union select BookinLastName,BookinFirstName,BookinDOB,'FEMALE',PatientID,dna, item from dbo.NGSTest, dbo.Patients, dbo.Item where BookinSex = 'F' and dbo.Item.ItemID=dbo.NGSTest.pipelineversion and dbo.Patients.InternalPatientID=dbo.NGSTest.InternalPatientID and NGSTestID = " + str(self.NGSTestID)
-            self.select_qry = "select BookinLastName,BookinFirstName,BookinDOB,'MALE',PatientID, dna, item  from dbo.NGSTest, dbo.Patients, dbo.Item where BookinSex = 'M' and dbo.Item.ItemID=dbo.NGSTest.pipelineversion and dbo.Patients.InternalPatientID=dbo.NGSTest.InternalPatientID and NGSTestID = " + str(self.NGSTestID) + " union select BookinLastName,BookinFirstName,BookinDOB,'FEMALE',PatientID,dna , item from dbo.NGSTest, dbo.Patients, dbo.Item where BookinSex = 'F' and dbo.Item.ItemID=dbo.NGSTest.pipelineversion and dbo.Patients.InternalPatientID=dbo.NGSTest.InternalPatientID and NGSTestID = " + str(self.NGSTestID)
+            self.select_qry = "select BookinLastName,BookinFirstName,BookinDOB,'MALE',PatientID, dna, item  from dbo.NGSTest, dbo.Patients, dbo.Item where BookinSex = 'M' and dbo.Item.ItemID=dbo.NGSTest.pipelineversion and dbo.Patients.InternalPatientID=dbo.NGSTest.InternalPatientID and NGSTestID = " + str(self.NGSTestID) + " union select BookinLastName,BookinFirstName,BookinDOB,'FEMALE',PatientID,dna , item from dbo.NGSTest, dbo.Patients, dbo.Item where BookinSex = 'F' and dbo.Item.ItemID=dbo.NGSTest.pipelineversion and dbo.Patients.InternalPatientID=dbo.NGSTest.InternalPatientID and NGSTestID = " + str(self.NGSTestID) + " union select BookinLastName,BookinFirstName,BookinDOB,'UNKNOWN',PatientID, dna , item from dbo.NGSTest, dbo.Patients, dbo.Item where BookinSex != 'F' and BookinSex != 'M' and dbo.Item.ItemID=dbo.NGSTest.pipelineversion and dbo.Patients.InternalPatientID=dbo.NGSTest.InternalPatientID and NGSTestID = "+ str(self.NGSTestID)
 
             self.select_qry_exception = "Can't pull out the patient info for NGSTestID " + str(self.NGSTestID) + ". Bookinsex must be F or M, an NGSTestID must be present and joins are dbo.Patients.InternalPatientID=dbo.NGSTest.InternalPatientID "
             ID = self.select_query()
@@ -145,8 +146,11 @@ class test_input():
             Gender = ID[0][3]
             DoB = ID[0][2]
             DNAnumber=ID[0][5]
-            format = "%d/%m/%Y"
-            DoB = DoB.strftime(format)
+            if DoB:
+                format = "%d/%m/%Y"
+                DoB = DoB.strftime(format)
+            else:
+                DoB = ""
             self.mokapipeversion=ID[0][6]
             
             html_table="<table border=\"1\" width=\"60%\" cellpadding=\"3\" cellspacing=\"0\">\n\
