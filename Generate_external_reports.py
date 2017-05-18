@@ -111,7 +111,7 @@ class test_input():
         self.report_panels = self.report_panels + ")"
         
         # print string_of_panels
-        self.select_qry = "select dbo.GenesHGNC_current_translation.ApprovedSymbol,dbo.NGSCoverage.avg_coverage,dbo.NGSCoverage.above20X \
+        self.select_qry = "select distinct dbo.GenesHGNC_current_translation.ApprovedSymbol,dbo.NGSCoverage.avg_coverage,dbo.NGSCoverage.above20X \
         from dbo.NGSPanelGenes, dbo.GenesHGNC_current_translation, dbo.NGSCoverage \
         where dbo.NGSPanelGenes.NGSPanelID in " + self.string_of_panels + " and dbo.GenesHGNC_current_translation.EntrezId_PanelApp=dbo.NGSCoverage.GeneSymbol and dbo.GenesHGNC_current_translation.HGNCID=dbo.NGSPanelGenes.HGNCID and dbo.NGSCoverage.NGSTestID = "+self.NGSTestID
         #where dbo.NGSPanelGenes.NGSPanelID in " + self.string_of_panels + " and dbo.GenesHGNC_current_translation.RefSeqGeneSymbol=dbo.NGSCoverage.GeneSymbol and dbo.GenesHGNC_current_translation.HGNCID=dbo.NGSPanelGenes.HGNCID and dbo.NGSCoverage.NGSTestID = "+self.NGSTestID
@@ -120,6 +120,17 @@ class test_input():
         # print self.select_qry
         self.select_qry_exception = "Can't pull out the coverage for NGS test" + str(self.NGSTestID)+". query is: "+ self.select_qry
         coverage_result = self.select_query()
+
+
+        # test for the number of genes in the panels
+        self.select_qry = "select distinct HGNCID from dbo.NGSPanelGenes where NGSPanelID in "+self.string_of_panels
+        expected_genes=self.select_query()
+        
+        #print "expected genes="+str(len(expected_genes))
+        #print "genes in coverage report="+str(len(coverage_result))
+        
+        #check that the number of genes in coverage result==expected genes. NB the coverage result query ensures the number of genes in HGNC==genepanels==coverage_report 
+        assert (len(expected_genes)==len(coverage_result)),"Number of genes in gene panel is not equal to the number of genes in the coverage report!"
 
         # print coverage_result
         for_df = {}
