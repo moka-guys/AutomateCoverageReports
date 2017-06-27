@@ -6,7 +6,7 @@ This script loops through a folder and calls the insert to db script for each co
 
 import os
 
-directory="P:\Bioinformatics\NGS\depthofcoverage\genesummaries"
+directory="P:\Clinic\Bioinformatics\NGS\depthofcoverage\genesummaries"
 #directory="H:\\test"
 for i in os.listdir(directory):
     if i.startswith("imported"):
