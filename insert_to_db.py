@@ -112,7 +112,7 @@ class test_input():
 
             # Get the NGS test ID
             self.select_qry = "select NGSTestID from dbo.NGSTest where InternalPatientID=" + str(self.InternalPatientID)  +" and StatusID not in " + self.statuses_to_ignore
-            self.select_qry_exception = "Can't pull out the NGS test ID for internal patient id " + str(self.InternalPatientID)
+            self.select_qry_exception = "Can't pull out the NGS test ID for internal patient id " + str(self.InternalPatientID)+ " .Is the status complete?"
             NGSTestID = self.select_query()
             if NGSTestID:
                 # ensure only one NGSTestID:
