@@ -1,5 +1,6 @@
 '''
 Created on 18 Nov 2016
+
 @author: aled
 '''
 import sys
@@ -13,7 +14,7 @@ class test_input():
     '''script should receive an argument -d or --dnanumber which contains the path to the depth of coverage files.'''
 
     def __init__(self):
-        self.folder_path = "S:\\Genetics\\Bioinformatics\\NGS\\depthofcoverage\\genesummaries\\"
+        self.folder_path = "P:\\Bioinformatics\\NGS\\depthofcoverage\\genesummaries\\"
         #self.folder_path = "S:\\Genetics_Data2\\Array\\Audits and Projects\\161118 automatecoverage\\chanjo_out\\"
         self.usage = "python import_depth_of_coverage.py -d <dnanumber>"
 
@@ -39,6 +40,8 @@ class test_input():
         self.InternalPatientID = ""
         self.NGSTestID = ""
 
+        # statuses_to_ignore
+        self.statuses_to_ignore="('4','1202218787','1202218802','120218800','120218801')"
 
     def set_depth_of_coverage_path(self, argv):
         ''' capture the command line arguments'''
@@ -63,7 +66,7 @@ class test_input():
         each dnanumber there is another dictionary with the gene as a key and coverage as value'''
         # for DoC file in folder
         for file in os.listdir(self.folder_path):
-            if file.startswith("imported"):
+            if file.startswith("imported") or file.startswith("problem_coverage"):
                 pass
             else:
                 # capture info from the filename
@@ -108,12 +111,12 @@ class test_input():
             self.InternalPatientID = self.select_query()[0][0]
 
             # Get the NGS test ID
-            self.select_qry = "select NGSTestID from dbo.NGSTest where InternalPatientID=" + str(self.InternalPatientID)  # +" and StatusID != 4"
+            self.select_qry = "select NGSTestID from dbo.NGSTest where InternalPatientID=" + str(self.InternalPatientID)  +" and StatusID not in " + self.statuses_to_ignore
             self.select_qry_exception = "Can't pull out the NGS test ID for internal patient id " + str(self.InternalPatientID)
             NGSTestID = self.select_query()
             if NGSTestID:
                 # ensure only one NGSTestID:
-                assert len(NGSTestID) == 1
+                assert len(NGSTestID) == 1, "Error multiple NGS Test IDs found for that internal patient ID. SQL is: select NGSTestID from dbo.NGSTest where InternalPatientID=" + str(self.InternalPatientID)
                 self.NGSTestID = NGSTestID[0][0]
             else:
                 raise Exception(self.select_qry_exception)
