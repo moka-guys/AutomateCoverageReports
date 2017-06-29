@@ -9,7 +9,7 @@ import os
 directory="P:\Bioinformatics\NGS\depthofcoverage\genesummaries"
 #directory="H:\\test"
 for i in os.listdir(directory):
-    if i.startswith("imported"):
+    if i.startswith("imported") or i.startswith("problem_coverage"):
         pass
     else:
         os.system("S:\Genetics_Data2\Array\Software\Python\python.exe F:\Moka\Files\Software\depthofcoverage\AutomateCoverageReports\insert_to_db.py -d " + str(i.split("_")[2]))
