@@ -203,7 +203,8 @@ class test_input():
 
             options={'footer-right':'Page [page] of [toPage]','footer-left':'Date Created [isodate]','quiet':""}
             pdfkit.from_file(self.output_html + str(self.NGSTestID) + ".html", self.output_html + str(PRU_for_pdfname)+"." +str(DNAnumber)+ ".cov.pdf", configuration=self.config,options=options)
-            print "Report can be found @ "+ self.output_html.replace("\\\\","\\")
+            print "Report can be found @ S:\Genetics\DNA LAB\R&D\New Tests\WES\Results\Coverage reports"
+            
     def select_query(self):
         '''This function is called to retrieve the whole result of a select query '''
         # Perform query and fetch all
