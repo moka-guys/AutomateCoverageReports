@@ -1,0 +1,3 @@
+select distinct Symbol 
+from dbo.NGSPanelGenes, dbo.GenesHGNC_current_translation 
+where dbo.GenesHGNC_current_translation.HGNCID=dbo.NGSPanelGenes.HGNCID and LocusType = 'phenotype only' and NGSPanelID in (593,800) 
