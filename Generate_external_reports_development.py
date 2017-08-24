@@ -123,14 +123,23 @@ class test_input():
 
 
         # test for the number of genes in the panels
-        self.select_qry = "select distinct HGNCID from dbo.NGSPanelGenes where NGSPanelID in "+self.string_of_panels
+        self.select_qry = "select distinct Symbol from dbo.NGSPanelGenes where NGSPanelID in "+self.string_of_panels
         expected_genes=self.select_query()
         
-        #print "expected genes="+str(len(expected_genes))
-        #print "genes in coverage report="+str(len(coverage_result))
         
-        #check that the number of genes in coverage result==expected genes. NB the coverage result query ensures the number of genes in HGNC==genepanels==coverage_report 
-        assert (len(expected_genes)==len(coverage_result)),"Number of genes in gene panel is not equal to the number of genes in the coverage report!"
+        
+        #check that the number of genes in coverage result==expected genes. This is to catch and report genes in panels which are phenotype locus only. NB the coverage result query ensures the number of genes in HGNC==genepanels==coverage_report 
+        if len(expected_genes)!=len(coverage_result):
+            self.select_qry = "select distinct Symbol from dbo.NGSPanelGenes, dbo.GenesHGNC_current_translation where dbo.GenesHGNC_current_translation.HGNCID=dbo.NGSPanelGenes.HGNCID and LocusType = 'phenotype only' and NGSPanelID in "+self.string_of_panels
+            phenotype_locus_genes=self.select_query()
+            #print "phenotype locus:"+str(len(phenotype_locus_genes))
+            #print "coverage result:"+str(len(coverage_result))
+            #print "expected count:"+str(len(expected_genes))
+            
+            if len(expected_genes)==len(coverage_result)+len(phenotype_locus_genes):
+                print "WARNING:"+str(len(phenotype_locus_genes))+" phenotype locus genes are present in the gene panel(s).These genes will not be present in the coverage report. Please ask the bioinformatics team to identify the phenotype locus only genes in these panels."
+            else:
+                raise exception("The number of genes in the gene panel is not equal to the number of genes in the coverage report (and it's not phenotype locus genes). Please speak to a bioinformatician")
 
         # print coverage_result
         for_df = {}
@@ -192,9 +201,10 @@ class test_input():
                 fh.write(template.render(template_vars))
 
 
-            options={'footer-right':'Page [page] of [toPage]','footer-left':'Date Created [isodate]'}
+            options={'footer-right':'Page [page] of [toPage]','footer-left':'Date Created [isodate]','quiet':""}
             pdfkit.from_file(self.output_html + str(self.NGSTestID) + ".html", self.output_html + str(PRU_for_pdfname)+"." +str(DNAnumber)+ ".cov.pdf", configuration=self.config,options=options)
-
+            print "Report can be found @ S:\Genetics\DNA LAB\R&D\New Tests\WES\Results\Coverage reports"
+            
     def select_query(self):
         '''This function is called to retrieve the whole result of a select query '''
         # Perform query and fetch all
