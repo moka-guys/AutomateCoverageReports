@@ -59,7 +59,9 @@ class test_input():
         
         self.path_wkthmltopdf = r'S:\Genetics_Data2\Array\Software\wkhtmltopdf\bin\wkhtmltopdf.exe'
         self.config = pdfkit.configuration(wkhtmltopdf=self.path_wkthmltopdf)
-
+        
+        self.warning = True
+        
     def capture_NGSTestID(self, argv):
         ''' capture the command line arguments'''
         # print argv
@@ -124,14 +126,19 @@ class test_input():
 
         # test for the number of genes in the panels
         self.select_qry = "select distinct Symbol from dbo.NGSPanelGenes where NGSPanelID in "+self.string_of_panels
+        self.select_qry_exception ="Can't pull out number of genes in the panels from NGSPanelGenes. query is: " + self.select_qry  
         expected_genes=self.select_query()
+        
         
         
         
         #check that the number of genes in coverage result==expected genes. This is to catch and report genes in panels which are phenotype locus only. NB the coverage result query ensures the number of genes in HGNC==genepanels==coverage_report 
         if len(expected_genes)!=len(coverage_result):
-            self.select_qry = "select distinct Symbol from dbo.NGSPanelGenes, dbo.GenesHGNC_current_translation where dbo.GenesHGNC_current_translation.HGNCID=dbo.NGSPanelGenes.HGNCID and LocusType = 'phenotype only' and NGSPanelID in "+self.string_of_panels
+            self.select_qry = "select distinct Symbol from dbo.NGSPanelGenes, dbo.GenesHGNC_current_translation where dbo.GenesHGNC_current_translation.HGNCID=dbo.NGSPanelGenes.HGNCID and LocusType != 'gene with protein product' and NGSPanelID in "+self.string_of_panels
+            self.select_qry_exception ="Can't pull out number of phenotype only genes in the panels from NGSPanelGenes. query is: " + self.select_qry
+            self.warning = False 
             phenotype_locus_genes=self.select_query()
+            self.warning = True
             #print "phenotype locus:"+str(len(phenotype_locus_genes))
             #print "coverage result:"+str(len(coverage_result))
             #print "expected count:"+str(len(expected_genes))
@@ -139,7 +146,7 @@ class test_input():
             if len(expected_genes)==len(coverage_result)+len(phenotype_locus_genes):
                 print "WARNING:"+str(len(phenotype_locus_genes))+" phenotype locus genes are present in the gene panel(s).These genes will not be present in the coverage report. Please ask the bioinformatics team to identify the phenotype locus only genes in these panels."
             else:
-                raise exception("The number of genes in the gene panel is not equal to the number of genes in the coverage report (and it's not phenotype locus genes). Please speak to a bioinformatician")
+                raise exception("The number of genes in the gene panel is not equal to the number of genes in the coverage report (and it's not genes where locustype != 'gene with protein product'). May be a MT-DNA gene? Please speak to a bioinformatician")
 
         # print coverage_result
         for_df = {}
@@ -209,12 +216,16 @@ class test_input():
         '''This function is called to retrieve the whole result of a select query '''
         # Perform query and fetch all
         result = self.cursor.execute(self.select_qry).fetchall()
-        self.result=result
+        
         # return result
         if result:
             return(result)
         else:
-            raise Exception(self.select_qry_exception)
+            if self.warning:
+                raise Exception(self.select_qry_exception)
+            else:
+                result=[]
+                return result
 
     def insert_query_function(self):
         '''This function executes an insert query'''
