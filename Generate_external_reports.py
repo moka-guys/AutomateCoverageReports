@@ -132,10 +132,11 @@ class test_input():
         
         
         
-        #check that the number of genes in coverage result==expected genes. This is to catch and report genes in panels which are phenotype locus only. NB the coverage result query ensures the number of genes in HGNC==genepanels==coverage_report 
+        # check that the number of genes in coverage result is the same number of genes that we would expect that from the gene panels that are also in Pan493.  
         if len(expected_genes)!=len(coverage_result):
-            self.select_qry = "select distinct Symbol from dbo.NGSPanelGenes, dbo.GenesHGNC_current_translation where dbo.GenesHGNC_current_translation.HGNCID=dbo.NGSPanelGenes.HGNCID and LocusType != 'gene with protein product' and NGSPanelID in "+self.string_of_panels
-            self.select_qry_exception ="Can't pull out number of phenotype only genes in the panels from NGSPanelGenes. query is: " + self.select_qry
+            # pull out genes from the gene panels which are NOT in Pan493.
+            self.select_qry = "select distinct HGNCID from dbo.NGSPanelGenes where NGSPanelID in "+self.string_of_panels + " and HGNCID not in (select HGNCID from dbo.NGSPanelGenes where NGSPanelID = 493)"
+            self.select_qry_exception ="Can't pull out number of genes in the panels which are also in Pan493: " + self.select_qry
             self.warning = False 
             phenotype_locus_genes=self.select_query()
             self.warning = True
@@ -144,9 +145,12 @@ class test_input():
             #print "expected count:"+str(len(expected_genes))
             
             if len(expected_genes)==len(coverage_result)+len(phenotype_locus_genes):
-                print "WARNING:"+str(len(phenotype_locus_genes))+" phenotype locus genes are present in the gene panel(s).These genes will not be present in the coverage report. Please ask the bioinformatics team to identify the phenotype locus only genes in these panels."
+                print "WARNING:"+str(len(phenotype_locus_genes))+" genes are present in the gene panel(s) which are not in Pan493 (the exome bed file). These genes will not be present in the coverage report. Please ask the bioinformatics team to identify these genes if required."
             else:
-                raise exception("The number of genes in the gene panel is not equal to the number of genes in the coverage report (and it's not genes where locustype != 'gene with protein product'). May be a MT-DNA gene? Please speak to a bioinformatician")
+                print "len(expected_genes))"+str(len(expected_genes))
+                print "len(coverage_result)"+str(len(coverage_result))
+                print "len(phenotype_locus_genes)"+str(len(phenotype_locus_genes))
+                raise Exception("The number of genes in the gene panel that are also in Pan493 is not equal to the number of genes in the coverage report. This means that chanjo has not produced an output for this gene or this gene's coverage has not been imported into moka successfully. Please speak to a bioinformatician")
 
         # print coverage_result
         for_df = {}
