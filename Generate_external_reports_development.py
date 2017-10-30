@@ -150,8 +150,13 @@ class test_input():
                 print "len(expected_genes))"+str(len(expected_genes))
                 print "len(coverage_result)"+str(len(coverage_result))
                 print "len(phenotype_locus_genes)"+str(len(phenotype_locus_genes))
-                raise Exception("The number of genes in the gene panel that are also in Pan493 is not equal to the number of genes in the coverage report. This means that chanjo has not produced an output for this gene or this gene's coverage has not been imported into moka successfully. Please speak to a bioinformatician")
-
+                               
+                # troubleshooting query to find genes not in Pan493
+                troubleshooting="select dbo.GenesHGNC_current_translation.HGNCID, LocusType,ApprovedSymbol from dbo.NGSPanelGenes,dbo.GenesHGNC_current_translation where dbo.GenesHGNC_current_translation.HGNCID = dbo.NGSPanelGenes.HGNCID and NGSPanelID in "+self.string_of_panels + " and dbo.GenesHGNC_current_translation.HGNCID not in (select HGNCID from dbo.NGSPanelGenes where NGSPanelID = 493)
+                print troubleshooting
+                
+                raise Exception("There is a gene in the gene panel which is not in the coverage report. Please ask a Bioinformatician to identify the gene(s)")
+                
         # print coverage_result
         for_df = {}
         if coverage_result is not None:
