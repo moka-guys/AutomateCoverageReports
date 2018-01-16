@@ -19,12 +19,11 @@ import numpy
 class GenerateCoverageReport():
     def __init__(self):
         """Set all parameters used later in the script"""
-        
+
         # define the expected usage to return incase of error
         self.usage = "python Generate_external_reports.py -t <NGSTestId> -p <PrimaryPanel> -q <SecondaryPanel> -r <TertiaryPanel>\nAt least one of -p, -q or -r is required."
 
         # variables for the database connection
-        #self.cnxn = pyodbc.connect("DRIVER={SQL Server}; SERVER=GSTTV-MOKA; DATABASE=devdatabase;") # details for development database
         self.cnxn = pyodbc.connect("DRIVER={SQL Server}; SERVER=GSTTV-MOKA; DATABASE=mokadata;") # details for moka data
         # create an object for the database connection
         self.cursor = self.cnxn.cursor()
@@ -35,12 +34,12 @@ class GenerateCoverageReport():
 
         # variable to hold the NGS test ID
         self.ngs_test_id = None
-        
+
         #variables to hold the panel numbers given as arguments to this script
         self.primary_panel = None
         self.secondary_panel = None
         self.tertiary_panel = None
-        
+
         # variable to build a string of all the panel codes used in a sql query
         self.string_of_panels = "("
         # variable to build a string of all the panel codes to be stated on the report
@@ -55,16 +54,16 @@ class GenerateCoverageReport():
         self.wkthmltopdf_path = r'\\gstt.local\shared\Genetics_Data2\Array\Software\wkhtmltopdf\bin\wkhtmltopdf.exe'
         # set the config for pdfkit  - specifying where the wkhtmltopdf.exe can be found
         self.pdfkit_config = pdfkit.configuration(wkhtmltopdf=self.wkthmltopdf_path)
-        
-        #a flag used to detemine whether to error if a sql query returns no results (this is expected in some cases but should be flagged in other cases)
+
+        # a flag used to detemine whether to error if a sql query returns no results (this is expected in some cases but should be flagged in other cases)
         self.warning = True
         
     def capture_command_line_arguments(self, argv):
         """ This function receives the command line arguments (NGS TestID and gene panels) as an input (argv).
         The function parses this and populates the self.variables
         """
-               
-        #using a try except loop and the getopt package go through this list of pairs of values
+
+        # using a try except loop and the getopt package go through this list of pairs of values
         try:
             # the get opt package requires the inputs to be defined. these can be in a short format (a single character) and a longer format.
             # If an argument has a input value (as opposed to a on/off flag) this is stated by the presense of a colon following the short format of argument names.
@@ -102,7 +101,7 @@ class GenerateCoverageReport():
 
     def extract_coverage_data(self):
         """ This function creates a coverage report for each sample using the NGSTestID and any given panels"""
-        
+
         # check at least one panel has been set
         if not any((self.primary_panel,self.secondary_panel,self.tertiary_panel)):
             # if no panels have been set print usage
@@ -117,8 +116,8 @@ class GenerateCoverageReport():
             # add the panel number to the SQL string (self.string_of_panels)
             self.string_of_panels = self.string_of_panels + str(self.primary_panel)
             # also add the panel number to the text string on the report)
-            self.report_panels = self.report_panels + "Pan" +str(self.primary_panel)
-        # if SecondaryPanel is present (-q)    
+            self.report_panels = self.report_panels + "Pan" + str(self.primary_panel)
+        # if SecondaryPanel is present (-q)
         if self.secondary_panel:
             # if PrimaryPanel has already been added to the string need to add this to the string with a comma
             if self.primary_panel:
@@ -132,7 +131,7 @@ class GenerateCoverageReport():
                 self.string_of_panels = self.string_of_panels + str(self.secondary_panel)
                 # also add the panel number to the text string on the report) no comma needed
                 self.report_panels = self.report_panels + "Pan" +str(self.secondary_panel)
-        # if SecondaryPanel is present (-r)
+        # if tertiaryPanel is present (-r)
         if self.tertiary_panel:
             # if either PrimaryPanel or SecondaryPanel is in the list
             if self.primary_panel or self.secondary_panel:
@@ -145,7 +144,7 @@ class GenerateCoverageReport():
                 self.string_of_panels = self.string_of_panels + str(self.tertiary_panel)
                 # also add the panel number to the text string on the report (no comma needed)
                 self.report_panels = self.report_panels + "Pan" +str(self.tertiary_panel)
-        
+
         # close the brackets on the lists
         self.string_of_panels = self.string_of_panels + ")"
         self.report_panels = self.report_panels + ")"
@@ -153,14 +152,14 @@ class GenerateCoverageReport():
         # The query to pull out the coverage data using the list of panels and the ngs test id is: 
         self.select_query = "select distinct dbo.GenesHGNC_current_translation.ApprovedSymbol,dbo.NGSCoverage.avg_coverage,dbo.NGSCoverage.above20X \
         from dbo.NGSPanelGenes, dbo.GenesHGNC_current_translation, dbo.NGSCoverage \
-        where dbo.NGSPanelGenes.NGSPanelID in " + self.string_of_panels + " and dbo.GenesHGNC_current_translation.EntrezId_PanelApp=dbo.NGSCoverage.GeneSymbol and dbo.GenesHGNC_current_translation.HGNCID=dbo.NGSPanelGenes.HGNCID and dbo.NGSCoverage.NGSTestID = "+self.ngs_test_id
+        where dbo.NGSPanelGenes.NGSPanelID in " + self.string_of_panels + " and dbo.GenesHGNC_current_translation.EntrezId_PanelApp=dbo.NGSCoverage.GeneSymbol and dbo.GenesHGNC_current_translation.HGNCID=dbo.NGSPanelGenes.HGNCID and dbo.NGSCoverage.NGSTestID = " + self.ngs_test_id
         
         # the exception message to be printed should the select query fail includes the query that was executed 
-        self.select_query_exception = "Can't pull out the coverage for NGS test" + str(self.ngs_test_id)+". query is: "+ self.select_query
+        self.select_query_exception = "Can't pull out the coverage for NGS test" + str(self.ngs_test_id) + ". query is: " + self.select_query
         
         # call the self.select query which uses the above queries.
         # assign the result (a list of tuples) to the variable coverage_result
-        coverage_result=self.perform_select_query()
+        coverage_result = self.perform_select_query()
         # return the result
         return coverage_result
 
@@ -170,48 +169,41 @@ class GenerateCoverageReport():
         """
         
         # count the distinct number of genes in the panels.
-        self.select_query = "select distinct HGNCID from dbo.NGSPanelGenes where NGSPanelID in "+self.string_of_panels
-        self.select_query_exception ="Can't pull out number of genes in the panels from NGSPanelGenes. query is: " + self.select_query  
+        self.select_query = "select distinct HGNCID from dbo.NGSPanelGenes where NGSPanelID in " + self.string_of_panels
+        self.select_query_exception = "Can't pull out number of genes in the panels from NGSPanelGenes. query is: " + self.select_query  
         
         # use self.select_query to execute the select query
-        expected_genes=self.perform_select_query()
+        expected_genes = self.perform_select_query()
         
         # check that the number of genes in coverage result is the same as the number of genes in the gene panels  
-        if len(expected_genes)!=len(coverage_data):
+        if len(expected_genes) != len(coverage_data):
             # If this number is different it may be that there are genes on the gene panels which are NOT in Pan493 (therefore no coverage data is generated).
             # these genes may be phenotype only or immunoglobulin genes for which there are no coordinates
             
             # pull out any genes from the gene panels where the gene is not in Pan493
-            self.select_query = "select distinct HGNCID from dbo.NGSPanelGenes where NGSPanelID in "+self.string_of_panels + " and HGNCID not in (select HGNCID from dbo.NGSPanelGenes where NGSPanelID = 493)"
-            self.select_query_exception ="Can't pull out number of genes in the panels which are also in Pan493: " + self.select_query
+            self.select_query = "select distinct HGNCID from dbo.NGSPanelGenes where NGSPanelID in " + self.string_of_panels + " and HGNCID not in (select HGNCID from dbo.NGSPanelGenes where NGSPanelID = 493)"
+            self.select_query_exception = "Can't pull out number of genes in the panels which are also in Pan493: " + self.select_query
             # this query may return an empty result. The self.select_query() will raise an error unless the self.warning flag is turned off. 
             # turn off warning flag
             self.warning = False
             # execute the query 
-            genes_not_in_493=self.perform_select_query()
+            genes_not_in_493 = self.perform_select_query()
             # turn warning back on
             self.warning = True
-            
-            ####################################################################
-            # #print "phenotype locus:"+str(len(genes_not_in_493))
-            # #print "coverage result:"+str(len(coverage_result))
-            # #print "expected count:"+str(len(expected_genes))
-            ####################################################################
-            
+                        
             # check the discrepancy between expected genes and genes on coverage report can be explained by genes on the gene panel that aren't in Pan493
-            if len(expected_genes)==len(coverage_data)+len(genes_not_in_493):
+            if len(expected_genes) == len(coverage_data) + len(genes_not_in_493):
                 # print a warning to say there were genes on the panel for which coverage was not generated
-                print "WARNING:"+str(len(genes_not_in_493))+" genes are present in the gene panel(s) which are not in Pan493 (the exome bed file). These genes will not be present in the coverage report. Please ask the bioinformatics team to identify these genes if required."
+                print "WARNING:" + str(len(genes_not_in_493)) + " genes are present in the gene panel(s) which are not in Pan493 (the exome bed file). These genes will not be present in the coverage report. Please ask the bioinformatics team to identify these genes if required."
             else:
                 # otherwise there is a more tricky problem to solve
-                
                 # print how many genes we can't account for
-                print "len(expected_genes))"+str(len(expected_genes))
-                print "len(coverage_result)"+str(len(coverage_data))
-                print "len(genes_not_in_493)"+str(len(genes_not_in_493))
-                               
+                print "len(expected_genes))" + str(len(expected_genes))
+                print "len(coverage_result)" + str(len(coverage_data))
+                print "len(genes_not_in_493)" + str(len(genes_not_in_493))
+
                 # This query may be useful when troubleshooting  - it states the genes which are not in Pan493
-                troubleshooting="select distinct dbo.GenesHGNC_current_translation.HGNCID, LocusType,ApprovedSymbol from dbo.NGSPanelGenes,dbo.GenesHGNC_current_translation where dbo.GenesHGNC_current_translation.HGNCID = dbo.NGSPanelGenes.HGNCID and NGSPanelID in "+self.string_of_panels + " and dbo.GenesHGNC_current_translation.HGNCID not in (select HGNCID from dbo.NGSPanelGenes where NGSPanelID = 493)"
+                troubleshooting = "select distinct dbo.GenesHGNC_current_translation.HGNCID, LocusType,ApprovedSymbol from dbo.NGSPanelGenes,dbo.GenesHGNC_current_translation where dbo.GenesHGNC_current_translation.HGNCID = dbo.NGSPanelGenes.HGNCID and NGSPanelID in " + self.string_of_panels + " and dbo.GenesHGNC_current_translation.HGNCID not in (select HGNCID from dbo.NGSPanelGenes where NGSPanelID = 493)"
                 # print query so it can be copied and pasted with the gene panels etc listed 
                 print troubleshooting
                 # print further clues to aid troublsehooting
@@ -257,8 +249,8 @@ class GenerateCoverageReport():
             # capture each item from the query 
             pru = id[0][4]
             # the pru is also used to name the report, however the colon must be removed
-            pru_for_pdfname=pru.replace(":","")
-            # concatenate the first and last names, capitalising the surname 
+            pru_for_pdfname = pru.replace(":", "")
+            # concatenate the last and first names, capitalising the surname 
             name = str.upper(id[0][0]) + " " + id[0][1]
             # capture gender
             gender = id[0][3]
@@ -274,13 +266,13 @@ class GenerateCoverageReport():
                 # if no date of birth can be found, set an empty string
                 date_of_birth = ""
             # set the verison of mokapipe to be stated on report
-            self.mokapipe_version=id[0][6]
+            self.mokapipe_version = id[0][6]
             
             # The coverage information is displayed on a table.
             # As the coverage report can be any length the html table is created in this script as opposed to the template.
             # The template has a placeholder where this table html code is placed when the report is rendered 
             # create the start of the table, and state the table headers.
-            html_table="<table border=\"1\" width=\"60%\" cellpadding=\"3\" cellspacing=\"0\">\n\
+            html_table = "<table border=\"1\" width=\"60%\" cellpadding=\"3\" cellspacing=\"0\">\n\
             \t<thead>\n\
             \t<tr style=\"text-align: centre;\" bgcolor=\"#A8A8A8\">\n\
             \t\t<th>Gene</th>\n\
@@ -292,14 +284,14 @@ class GenerateCoverageReport():
             # then loop through each item in the pandas dataframe, capturing the index (gene symbol) and the row
             for gene, row in coverage_data_frame.iterrows(): 
                 # pull out the percentage Bases at 20X column from that row, and round down to the nearest whole number eg 99.9 -> 99(to ensure coverage is not over stated)
-                coverage=str(int(numpy.floor(row['Percentage Bases at 20X*'])))
+                coverage = str(int(numpy.floor(row['Percentage Bases at 20X*'])))
                 # add a row the the html table for the gene and coverage
-                html_table=html_table+"\t\t\t\t<tr align=\"center\">\n\
-                \t<td>"+gene+"</td>\n\
-                \t<td>"+coverage+"</td>\n\
+                html_table = html_table+"\t\t\t\t<tr align=\"center\">\n\
+                \t<td>" + gene + "</td>\n\
+                \t<td>" + coverage + "</td>\n\
                 </tr>\n"
             # when all genes have been added to the table close the table. 
-            html_table=html_table+"</tbody>\n</table>"
+            html_table = html_table + "</tbody>\n</table>"
             
             # specify the folder containing the html templates 
             html_template_dir = Environment(loader=FileSystemLoader(self.html_template))
@@ -318,9 +310,9 @@ class GenerateCoverageReport():
             # the html file can then be converted into a PDF. This uses the pdfkit package and wkhtmltopdf software (specified in __init__)
             # a number of options can be added, such as footers on the page and any standard out when generating the report
             # add page number and date stamp to report and turn off any standard out (this would be displayed in the message box in moka, if the report is generated in moka)
-            pdfkit_options={'footer-right':'Page [page] of [toPage]','footer-left':'Date Created [isodate]','quiet':""}
+            pdfkit_options = {'footer-right':'Page [page] of [toPage]','footer-left':'Date Created [isodate]','quiet':""}
             # using the pdfkit package, specify the html file to be converted, name the pdf kit using the PRU and DNA number and pass in the software locations and options stated above 
-            pdfkit.from_file(self.output_html + str(self.ngs_test_id) + ".html", self.output_html + str(pru_for_pdfname)+"." +str(dna_number)+ ".cov.pdf", configuration=self.pdfkit_config,options=pdfkit_options)
+            pdfkit.from_file(self.output_html + str(self.ngs_test_id) + ".html", self.output_html + str(pru_for_pdfname) + "." + str(dna_number) + ".cov.pdf", configuration=self.pdfkit_config,options=pdfkit_options)
             # report to the user where the reports can be found (NB this location is different to where the reports are saved to - these are either moved manually or in the Moka front end)
             print "Report can be found @ S:\Genetics\DNA LAB\R&D\New Tests\WES\Results\Coverage reports"
             
@@ -339,7 +331,7 @@ class GenerateCoverageReport():
                 raise Exception(self.select_queryException)
             # if the warning flag is not set return an empty list
             else:
-                result=[]
+                result = []
                 return result
 
 def main():
@@ -351,7 +343,7 @@ def main():
     # send all command line arguments, except the name of the script to be assigned to variables
     CreateReport.capture_command_line_arguments(sys.argv[1:])
     # using the captured command line arguments extract the coverage data
-    coverage_data=CreateReport.extract_coverage_data()
+    coverage_data = CreateReport.extract_coverage_data()
     # perform a test, to ensure that the report contains all the required genes, and no additional genes
     if CreateReport.test_result(coverage_data):
         # if the test passed create the html file and convert to pdf 
