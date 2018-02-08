@@ -312,7 +312,7 @@ class GenerateCoverageReport():
             # add page number and date stamp to report and turn off any standard out (this would be displayed in the message box in moka, if the report is generated in moka)
             pdfkit_options = {'footer-right':'Page [page] of [toPage]','footer-left':'Date Created [isodate]','quiet':""}
             # using the pdfkit package, specify the html file to be converted, name the pdf kit using the PRU and DNA number and pass in the software locations and options stated above 
-            pdfkit.from_file(self.output_html + str(self.ngs_test_id) + ".html", self.output_html + str(pru_for_pdfname) + "." + str(dna_number) + ".NGSTestID_" + str(self.ngs_test_id) + ".cov.pdf", configuration=self.pdfkit_config,options=pdfkit_options)
+            pdfkit.from_file(self.output_html + str(self.ngs_test_id) + ".html", self.output_html + str(pru_for_pdfname) + "." + str(dna_number) + "NGSTestID_" + str(self.ngs_test_id) + ".cov.pdf", configuration=self.pdfkit_config,options=pdfkit_options)
             # report to the user where the reports can be found (NB this location is different to where the reports are saved to - these are either moved manually or in the Moka front end)
             print "Report can be found @ S:\Genetics\DNA LAB\R&D\New Tests\WES\Results\Coverage reports"
             
