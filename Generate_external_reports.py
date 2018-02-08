@@ -242,7 +242,7 @@ class GenerateCoverageReport():
             # extract patient demographics to populate the report             
             self.select_query = "select BookinLastName,BookinFirstName,BookinDOB,'MALE',PatientID, dna, item  from dbo.NGSTest, dbo.Patients, dbo.Item where BookinSex = 'M' and dbo.Item.ItemID=dbo.NGSTest.pipelineversion and dbo.Patients.InternalPatientID=dbo.NGSTest.InternalPatientID and NGSTestID = " + str(self.ngs_test_id) + " union select BookinLastName,BookinFirstName,BookinDOB,'FEMALE',PatientID,dna , item from dbo.NGSTest, dbo.Patients, dbo.Item where BookinSex = 'F' and dbo.Item.ItemID=dbo.NGSTest.pipelineversion and dbo.Patients.InternalPatientID=dbo.NGSTest.InternalPatientID and NGSTestID = " + str(self.ngs_test_id) + " union select BookinLastName,BookinFirstName,BookinDOB,'UNKNOWN',PatientID, dna , item from dbo.NGSTest, dbo.Patients, dbo.Item where BookinSex != 'F' and BookinSex != 'M' and dbo.Item.ItemID=dbo.NGSTest.pipelineversion and dbo.Patients.InternalPatientID=dbo.NGSTest.InternalPatientID and NGSTestID = "+ str(self.ngs_test_id)
             # set the exception message to print should the patient not be found
-            self.select_query_exception = "Can't pull out the patient info for NGSTestID " + str(self.ngs_test_id) + ". Bookinsex must be F or M, an NGSTestID must be present and joins are dbo.Patients.InternalPatientID=dbo.NGSTest.InternalPatientID "
+            self.select_query_exception = "Can't pull out the patient info for NGSTestID " + str(self.ngs_test_id) + ". Bookinsex must be F or M, an NGSTestID must be present and joins are dbo.Patients.InternalPatientID=dbo.NGSTest.InternalPatientID. If mokapipe version is null it may be a re-analysis case?"
             # execute the query
             id = self.perform_select_query()
             
@@ -312,7 +312,7 @@ class GenerateCoverageReport():
             # add page number and date stamp to report and turn off any standard out (this would be displayed in the message box in moka, if the report is generated in moka)
             pdfkit_options = {'footer-right':'Page [page] of [toPage]','footer-left':'Date Created [isodate]','quiet':""}
             # using the pdfkit package, specify the html file to be converted, name the pdf kit using the PRU and DNA number and pass in the software locations and options stated above 
-            pdfkit.from_file(self.output_html + str(self.ngs_test_id) + ".html", self.output_html + str(pru_for_pdfname) + "." + str(dna_number) + ".cov.pdf", configuration=self.pdfkit_config,options=pdfkit_options)
+            pdfkit.from_file(self.output_html + str(self.ngs_test_id) + ".html", self.output_html + str(pru_for_pdfname) + "." + str(dna_number) + "NGSTestID_" + str(self.ngs_test_id) + ".cov.pdf", configuration=self.pdfkit_config,options=pdfkit_options)
             # report to the user where the reports can be found (NB this location is different to where the reports are saved to - these are either moved manually or in the Moka front end)
             print "Report can be found @ S:\Genetics\DNA LAB\R&D\New Tests\WES\Results\Coverage reports"
             
@@ -328,7 +328,7 @@ class GenerateCoverageReport():
         else:
             # and the warning flag is on raise the given exception message which should help troubleshooting
             if self.warning:
-                raise Exception(self.select_queryException)
+                raise Exception(self.select_query_exception)
             # if the warning flag is not set return an empty list
             else:
                 result = []
