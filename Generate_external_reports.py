@@ -150,9 +150,9 @@ class GenerateCoverageReport():
         self.report_panels = self.report_panels + ")"
         
         # The query to pull out the coverage data using the list of panels and the ngs test id is: 
-        self.select_query = "select distinct dbo.GenesHGNC_current_translation.ApprovedSymbol,dbo.NGSCoverage.avg_coverage,dbo.NGSCoverage.above20X \
-        from dbo.NGSPanelGenes, dbo.GenesHGNC_current_translation, dbo.NGSCoverage \
-        where dbo.NGSPanelGenes.NGSPanelID in " + self.string_of_panels + " and dbo.GenesHGNC_current_translation.EntrezId_PanelApp=dbo.NGSCoverage.GeneSymbol and dbo.GenesHGNC_current_translation.HGNCID=dbo.NGSPanelGenes.HGNCID and dbo.NGSCoverage.NGSTestID = " + self.ngs_test_id
+        self.select_query = "select distinct dbo.GenesHGNC_current.ApprovedSymbol,dbo.NGSCoverage.avg_coverage,dbo.NGSCoverage.above20X \
+        from dbo.NGSPanelGenes, dbo.GenesHGNC_current, dbo.NGSCoverage \
+        where dbo.NGSPanelGenes.NGSPanelID in " + self.string_of_panels + " and dbo.GenesHGNC_current.EntrezGeneIDmapped = dbo.NGSCoverage.GeneSymbol and dbo.GenesHGNC_current.HGNCID=dbo.NGSPanelGenes.HGNCID and dbo.NGSCoverage.NGSTestID = " + self.ngs_test_id
         
         # the exception message to be printed should the select query fail includes the query that was executed 
         self.select_query_exception = "Can't pull out the coverage for NGS test" + str(self.ngs_test_id) + ". query is: " + self.select_query
@@ -203,7 +203,7 @@ class GenerateCoverageReport():
                 print "len(genes_not_in_493)" + str(len(genes_not_in_493))
 
                 # This query may be useful when troubleshooting  - it states the genes which are not in Pan493
-                troubleshooting = "select distinct dbo.GenesHGNC_current_translation.HGNCID, LocusType,ApprovedSymbol from dbo.NGSPanelGenes,dbo.GenesHGNC_current_translation where dbo.GenesHGNC_current_translation.HGNCID = dbo.NGSPanelGenes.HGNCID and NGSPanelID in " + self.string_of_panels + " and dbo.GenesHGNC_current_translation.HGNCID not in (select HGNCID from dbo.NGSPanelGenes where NGSPanelID = 493)"
+                troubleshooting = "select distinct dbo.GenesHGNC_current.HGNCID, LocusType,ApprovedSymbol from dbo.NGSPanelGenes,dbo.GenesHGNC_current where dbo.GenesHGNC_current.HGNCID = dbo.NGSPanelGenes.HGNCID and NGSPanelID in " + self.string_of_panels + " and dbo.GenesHGNC_current.HGNCID not in (select HGNCID from dbo.NGSPanelGenes where NGSPanelID = 493)"
                 # print query so it can be copied and pasted with the gene panels etc listed 
                 print troubleshooting
                 # print further clues to aid troublsehooting
