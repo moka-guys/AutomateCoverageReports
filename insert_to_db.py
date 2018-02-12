@@ -41,7 +41,7 @@ class test_input():
         self.NGSTestID = ""
 
         # statuses_to_ignore
-        self.statuses_to_ignore="('4','1202218787','1202218802','120218800','120218801')"
+        self.statuses_to_ignore="('4','1202218787','1202218802','120218800','120218801','1202218816')"
 
     def set_depth_of_coverage_path(self, argv):
         ''' capture the command line arguments'''
