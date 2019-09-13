@@ -33,7 +33,7 @@ class test_input():
             ), 
             autocommit=True
         )
-		# create cursor
+        # create cursor
         self.cursor = self.cnxn.cursor()
 
         # dictionary to hold the depth of coverage result for each dna number.
@@ -112,6 +112,11 @@ class test_input():
             # capture the runfolder from the path
             runfolderpath = self.folder_path.split('\\')
             self.runfolder = runfolderpath[-1]
+
+            # test db connection
+            self.select_qry = "select item from item where itemid = 61"
+            print self.select_query()[0][0]
+            assert "Testes" in self.select_query()[0][0]
 
             # select query to find the internal patientid from dna number
             self.select_qry = "select InternalPatientID from dbo.DNA where DNANumber = '" + dnanumber + "'"
