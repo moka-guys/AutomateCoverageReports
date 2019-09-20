@@ -153,7 +153,7 @@ class GenerateCoverageReport():
         self.select_query = "select distinct dbo.GenesHGNC_current.ApprovedSymbol,dbo.NGSCoverage.avg_coverage,dbo.NGSCoverage.above20X \
         from dbo.NGSPanelGenes, dbo.GenesHGNC_current, dbo.NGSCoverage \
         where dbo.NGSPanelGenes.NGSPanelID in " + self.string_of_panels + " and dbo.GenesHGNC_current.EntrezGeneIDmapped = dbo.NGSCoverage.GeneSymbol and dbo.GenesHGNC_current.HGNCID=dbo.NGSPanelGenes.HGNCID and dbo.NGSCoverage.NGSTestID = " + self.ngs_test_id
-        
+
         # the exception message to be printed should the select query fail includes the query that was executed 
         self.select_query_exception = "Can't pull out the coverage for NGS test" + str(self.ngs_test_id) + ". query is: " + self.select_query
         
@@ -240,9 +240,9 @@ class GenerateCoverageReport():
             coverage_data_frame.sort_index(inplace=True)
 
             # extract patient demographics to populate the report             
-            self.select_query = "select BookinLastName,BookinFirstName,BookinDOB,'MALE',PatientID, dna, item  from dbo.NGSTest, dbo.Patients, dbo.Item where BookinSex = 'M' and dbo.Item.ItemID=dbo.NGSTest.pipelineversion and dbo.Patients.InternalPatientID=dbo.NGSTest.InternalPatientID and NGSTestID = " + str(self.ngs_test_id) + " union select BookinLastName,BookinFirstName,BookinDOB,'FEMALE',PatientID,dna , item from dbo.NGSTest, dbo.Patients, dbo.Item where BookinSex = 'F' and dbo.Item.ItemID=dbo.NGSTest.pipelineversion and dbo.Patients.InternalPatientID=dbo.NGSTest.InternalPatientID and NGSTestID = " + str(self.ngs_test_id) + " union select BookinLastName,BookinFirstName,BookinDOB,'UNKNOWN',PatientID, dna , item from dbo.NGSTest, dbo.Patients, dbo.Item where BookinSex != 'F' and BookinSex != 'M' and dbo.Item.ItemID=dbo.NGSTest.pipelineversion and dbo.Patients.InternalPatientID=dbo.NGSTest.InternalPatientID and NGSTestID = "+ str(self.ngs_test_id)
+            self.select_query = "select BookinLastName,BookinFirstName,BookinDOB,'MALE',PatientID, dna, item, nhsnumber from dbo.NGSTest, dbo.Patients, dbo.Item where BookinSex = 'M' and dbo.Item.ItemID=dbo.NGSTest.pipelineversion and dbo.Patients.InternalPatientID=dbo.NGSTest.InternalPatientID and NGSTestID = " + str(self.ngs_test_id) + " union select BookinLastName,BookinFirstName,BookinDOB,'FEMALE',PatientID,dna,item, nhsnumber from  dbo.NGSTest, dbo.Patients, dbo.Item where BookinSex = 'F' and dbo.Item.ItemID=dbo.NGSTest.pipelineversion and dbo.Patients.InternalPatientID=dbo.NGSTest.InternalPatientID and NGSTestID = " + str(self.ngs_test_id) + " union select BookinLastName,BookinFirstName,BookinDOB,'UNKNOWN',PatientID, dna , item, nhsnumber from  dbo.NGSTest, dbo.Patients, dbo.Item where BookinSex != 'F' and BookinSex != 'M' and dbo.Item.ItemID=dbo.NGSTest.pipelineversion and dbo.Patients.InternalPatientID=dbo.NGSTest.InternalPatientID and NGSTestID = "+ str(self.ngs_test_id)
             # set the exception message to print should the patient not be found
-            self.select_query_exception = "Can't pull out the patient info for NGSTestID " + str(self.ngs_test_id) + ". Bookinsex must be F or M, an NGSTestID must be present and joins are dbo.Patients.InternalPatientID=dbo.NGSTest.InternalPatientID. If mokapipe version is null it may be a re-analysis case?"
+            self.select_query_exception = "Can't pull out the patient info for NGSTestID " + str(self.ngs_test_id) + ". An NGSTestID must be present and joins are dbo.Patients.InternalPatientID=dbo.NGSTest.InternalPatientID. If mokapipe version is null it may be a re-analysis case?"
             # execute the query
             id = self.perform_select_query()
             
@@ -250,14 +250,25 @@ class GenerateCoverageReport():
             pru = id[0][4]
             # the pru is also used to name the report, however the colon must be removed
             pru_for_pdfname = pru.replace(":", "")
+            # Create the footer text
+            pru_footer="PRU:"+pru
             # concatenate the last and first names, capitalising the surname 
             name = str.upper(id[0][0]) + " " + id[0][1]
+            # Create the footer text
+            name_footer="\nName:"+name
             # capture gender
             gender = id[0][3]
             # set date of birth
             date_of_birth = id[0][2]
             # set dna number
             dna_number=id[0][5]
+            # nhs number
+            nhs_num=id[0][7]
+            # Create the footer text - NHS number isn't always present so put this in an if loop
+            if nhs_num:
+                nhs_num_footer="NHS number:"+nhs_num
+            else:
+                nhs_num_footer="NHS number:"
             # convert the date of birth into a specific format eg 25/12/2017
             if date_of_birth:
                 format = "%d/%m/%Y"
@@ -310,7 +321,7 @@ class GenerateCoverageReport():
             # the html file can then be converted into a PDF. This uses the pdfkit package and wkhtmltopdf software (specified in __init__)
             # a number of options can be added, such as footers on the page and any standard out when generating the report
             # add page number and date stamp to report and turn off any standard out (this would be displayed in the message box in moka, if the report is generated in moka)
-            pdfkit_options = {'footer-right':'Page [page] of [toPage]','footer-left':'Date Created [isodate]','quiet':""}
+            pdfkit_options = {'footer-left':pru_footer+name_footer,'footer-center':nhs_num_footer,'footer-right':'Page [page] of [toPage]\nDate Created [isodate]','quiet':""}
             # using the pdfkit package, specify the html file to be converted, name the pdf kit using the PRU and DNA number and pass in the software locations and options stated above 
             pdfkit.from_file(self.output_html + str(self.ngs_test_id) + ".html", self.output_html + str(pru_for_pdfname) + "." + str(dna_number) + ".NGSTestID_" + str(self.ngs_test_id) + ".cov.pdf", configuration=self.pdfkit_config,options=pdfkit_options)
             # report to the user where the reports can be found (NB this location is different to where the reports are saved to - these are either moved manually or in the Moka front end)
