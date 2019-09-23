@@ -115,7 +115,7 @@ class test_input():
 
             # test db connection
             self.select_qry = "select item from item where itemid = 61"
-            assert "Testes" in self.select_query()[0][0]
+            assert "Testes" in self.select_query()[0][0], "Error - db connection test failed. Unable to query Moka"
 
             # select query to find the internal patientid from dna number
             self.select_qry = "select InternalPatientID from dbo.DNA where DNANumber = '" + dnanumber + "'"
