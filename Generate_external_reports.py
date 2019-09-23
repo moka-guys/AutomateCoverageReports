@@ -14,6 +14,7 @@ from jinja2 import Environment, FileSystemLoader
 import pdfkit
 import datetime
 import numpy
+from ConfigParser import ConfigParser
 
 
 class GenerateCoverageReport():
@@ -23,8 +24,18 @@ class GenerateCoverageReport():
         # define the expected usage to return incase of error
         self.usage = "python Generate_external_reports.py -t <NGSTestId> -p <PrimaryPanel> -q <SecondaryPanel> -r <TertiaryPanel>\nAt least one of -p, -q or -r is required."
 
+		# Read config file (must be called config.ini and stored in same directory as script)
+        config = ConfigParser()
+        config.read(os.path.join(os.path.dirname(os.path.realpath(__file__)), "config.ini"))
+
         # variables for the database connection
-        self.cnxn = pyodbc.connect("DRIVER={SQL Server}; SERVER=GSTTV-MOKA; DATABASE=mokadata;") # details for moka data
+        self.cnxn = pyodbc.connect('DRIVER={{SQL Server}}; SERVER={server}; DATABASE={database};'.format(
+            server=config.get("MOKA", "SERVER"),
+            database=config.get("MOKA", "DATABASE")
+            ), 
+            autocommit=True
+        )
+
         # create an object for the database connection
         self.cursor = self.cnxn.cursor()
 
