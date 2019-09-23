@@ -115,7 +115,6 @@ class test_input():
 
             # test db connection
             self.select_qry = "select item from item where itemid = 61"
-            print self.select_query()[0][0]
             assert "Testes" in self.select_query()[0][0]
 
             # select query to find the internal patientid from dna number
