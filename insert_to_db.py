@@ -7,6 +7,7 @@ import sys
 import getopt
 import os
 import pyodbc
+from ConfigParser import ConfigParser
 
 
 class test_input():
@@ -21,9 +22,18 @@ class test_input():
         # self.dnanumber
         self.dnanumber = ""
 
-        # variables for the database connection
-        self.cnxn = pyodbc.connect("DRIVER={SQL Server}; SERVER=GSTTV-MOKA; DATABASE=mokadata;")
-        #self.cnxn = pyodbc.connect("DRIVER={SQL Server}; SERVER=GSTTV-MOKA; DATABASE=devdatabase;")
+       # Read config file (must be called config.ini and stored in same directory as script)
+        config = ConfigParser()
+        config.read(os.path.join(os.path.dirname(os.path.realpath(__file__)), "config.ini"))
+
+        # read variables for the database connection from config file
+        self.cnxn = pyodbc.connect('DRIVER={{SQL Server}}; SERVER={server}; DATABASE={database};'.format(
+            server=config.get("MOKA", "SERVER"),
+            database=config.get("MOKA", "DATABASE")
+            ), 
+            autocommit=True
+        )
+        # create cursor
         self.cursor = self.cnxn.cursor()
 
         # dictionary to hold the depth of coverage result for each dna number.
@@ -102,6 +112,11 @@ class test_input():
             # capture the runfolder from the path
             runfolderpath = self.folder_path.split('\\')
             self.runfolder = runfolderpath[-1]
+
+            # test db connection
+            self.select_qry = "select item from item where itemid = 61"
+            print self.select_query()[0][0]
+            assert "Testes" in self.select_query()[0][0]
 
             # select query to find the internal patientid from dna number
             self.select_qry = "select InternalPatientID from dbo.DNA where DNANumber = '" + dnanumber + "'"
